@@ -2,49 +2,56 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <script>
-        // هذا الكود يعمل قبل أي شيء آخر في الصفحة
-        const storedPass = localStorage.getItem('site_pass');
-        if (storedPass !== "771506041") {
-            let entered = prompt("يرجى إدخال كلمة المرور:");
-            if (entered === "771506041") {
-                localStorage.setItem('site_pass', "771506041");
-            } else {
-                document.body.innerHTML = "<h1 style='text-align:center; color:red; margin-top:20vh;'>دخول مرفوض!</h1>";
-                window.stop();
-            }
-        }
-    </script>
-    <title>TwnTool License System</title>
+    <title>TWNTOOL LUFFY</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { font-family: sans-serif; background-color: #120f1d; color: white; }</style>
+    <style>
+        body { font-family: sans-serif; background-color: #120f1d; color: white; }
+        #app-content { display: none; } /* مخفي افتراضياً */
+    </style>
 </head>
 <body class="p-4">
-    <div class="max-w-4xl mx-auto">
+
+    <!-- شاشة الترحيب قبل الدخول -->
+    <div id="login-screen" class="flex flex-col items-center justify-center min-h-[80vh]">
+        <h1 class="text-5xl font-black text-purple-500 mb-2">TWNTOOL</h1>
+        <h2 class="text-3xl font-bold text-white mb-8">LUFFY</h2>
+        <button onclick="checkPass()" class="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-xl font-bold">دخول للسيرفر</button>
+    </div>
+
+    <!-- لوحة التحكم المخفية -->
+    <div id="app-content" class="max-w-4xl mx-auto">
         <div class="flex justify-between mb-6">
             <h1 class="text-xl font-bold">الرئيسية</h1>
             <div class="flex gap-2">
                 <button onclick="addNew()" class="bg-purple-600 px-4 py-2 rounded-lg text-sm">+ جديد</button>
-                <button onclick="exportData('json')" class="bg-slate-800 px-3 py-2 rounded-lg text-sm">JSON</button>
+                <button onclick="exportData()" class="bg-slate-800 px-3 py-2 rounded-lg text-sm">JSON</button>
             </div>
         </div>
         <div id="licenses-list" class="space-y-4"></div>
     </div>
 
     <script>
+        function checkPass() {
+            let entered = prompt("يرجى إدخال كلمة المرور:");
+            if (entered === "771506041") {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+            } else {
+                alert("كلمة مرور خاطئة!");
+            }
+        }
+
         let licenses = JSON.parse(localStorage.getItem('my_licenses')) || [];
         function render() {
             const list = document.getElementById('licenses-list');
             list.innerHTML = licenses.map((l, i) => `
                 <div class="bg-[#1e1932] p-4 rounded-xl border border-slate-700 flex justify-between items-center">
-                    <div>
-                        <div class="font-mono font-bold">${l.key}</div>
-                        <div class="text-xs text-gray-400">${l.email}</div>
-                    </div>
+                    <div><div class="font-mono font-bold">${l.key}</div><div class="text-xs text-gray-400">${l.email}</div></div>
                     <button onclick="deleteLicense(${i})" class="text-red-400 text-xs">حذف</button>
                 </div>
             `).join('');
         }
+
         function addNew() {
             let key = prompt("أدخل مفتاح الترخيص:");
             let email = prompt("أدخل البريد:");
@@ -54,12 +61,14 @@
                 render();
             }
         }
+
         function deleteLicense(i) {
             licenses.splice(i, 1);
             localStorage.setItem('my_licenses', JSON.stringify(licenses));
             render();
         }
-        function exportData(type) {
+
+        function exportData() {
             let data = JSON.stringify(licenses);
             let a = document.createElement('a');
             a.href = "data:text/json;charset=utf-8," + encodeURIComponent(data);
