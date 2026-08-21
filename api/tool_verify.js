@@ -1,8 +1,3 @@
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
 module.exports = async (req, res) => {
   const { key } = req.query;
 
@@ -10,26 +5,40 @@ module.exports = async (req, res) => {
     return res.status(400).json({ valid: false, message: "License key required" });
   }
 
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
   if (!supabaseUrl || !supabaseKey) {
     return res.status(500).json({ valid: false, message: "Database config missing" });
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  try {
+    // طلب البيانات مباشرة عبر Fetch API بدون مكتبات
+    const response = await fetch(`${supabaseUrl}/rest/v1/licenses?license_key=eq.${encodeURIComponent(key)}`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-  const { data, error } = await supabase
-    .from('licenses')
-    .select('*')
-    .eq('license_key', key)
-    .single();
+    const data = await response.json();
 
-  if (error || !data) {
-    return res.status(200).json({ valid: false, message: "Invalid license" });
+    if (!response.ok || !data || data.length === 0) {
+      return res.status(200).json({ valid: false, message: "Invalid license" });
+    }
+
+    const license = data[0];
+
+    return res.status(200).json({
+      valid: true,
+      message: "License verified successfully",
+      email: license.email,
+      expiry_date: license.expiry_date
+    });
+
+  } catch (err) {
+    return res.status(500).json({ valid: false, message: "Server error", error: err.message });
   }
-
-  return res.status(200).json({ 
-    valid: true, 
-    message: "License verified successfully",
-    email: data.email,
-    expiry_date: data.expiry_date
-  });
 };
