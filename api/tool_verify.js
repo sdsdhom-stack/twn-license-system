@@ -5,15 +5,19 @@ module.exports = async (req, res) => {
     return res.status(400).json({ valid: false, message: "License key required" });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
+  let supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return res.status(500).json({ valid: false, message: "Database config missing" });
+    return res.status(500).json({ valid: false, message: "Missing Environment Variables in Vercel" });
+  }
+
+  // تنظيف الرابط من أي شرطة زائدة في النهاية قد تسبب خطأ
+  if (supabaseUrl.endsWith('/')) {
+    supabaseUrl = supabaseUrl.slice(0, -1);
   }
 
   try {
-    // طلب البيانات مباشرة عبر Fetch API بدون مكتبات
     const response = await fetch(`${supabaseUrl}/rest/v1/licenses?license_key=eq.${encodeURIComponent(key)}`, {
       method: 'GET',
       headers: {
@@ -25,8 +29,14 @@ module.exports = async (req, res) => {
 
     const data = await response.json();
 
-    if (!response.ok || !data || data.length === 0) {
-      return res.status(200).json({ valid: false, message: "Invalid license" });
+    // إذا رفض Supabase الطلب، سيطبع لنا السبب الدقيق!
+    if (!response.ok) {
+      return res.status(200).json({ valid: false, message: "Supabase Connection Error", details: data });
+    }
+
+    // إذا اتصل بنجاح ولكن لم يجد المفتاح في الجدول
+    if (!data || data.length === 0) {
+      return res.status(200).json({ valid: false, message: "Key not found in database", entered_key: key });
     }
 
     const license = data[0];
@@ -39,6 +49,6 @@ module.exports = async (req, res) => {
     });
 
   } catch (err) {
-    return res.status(500).json({ valid: false, message: "Server error", error: err.message });
+    return res.status(500).json({ valid: false, message: "Server crashed", error: err.message });
   }
 };
