@@ -15,13 +15,12 @@
         }
     </script>
 </head>
-<body class="bg-[#120f1d] text-gray-200 min-h-screen p-4">
+<body class="bg-[#120f1d] text-gray-200 p-4">
     <div class="max-w-4xl mx-auto">
-        <!-- الرأس والأزرار -->
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-xl font-bold">الرئيسية</h1>
             <div class="flex gap-2">
-                <button class="bg-purple-600 px-4 py-2 rounded-lg text-sm">+ جديد</button>
+                <button onclick="alert('لإضافة تراخيص، يرجى التعديل من داخل ملف index.html في GitHub حالياً')" class="bg-purple-600 px-4 py-2 rounded-lg text-sm">+ جديد</button>
                 <button class="bg-slate-800 px-3 py-2 rounded-lg text-sm">JSON</button>
                 <button class="bg-emerald-900/60 text-emerald-300 px-3 py-2 rounded-lg text-sm">CSV</button>
             </div>
@@ -34,20 +33,13 @@
             <div class="bg-[#2d181b] p-5 rounded-2xl border border-rose-500/20"><div class="text-3xl font-bold text-rose-400">0</div><div class="text-gray-400 text-sm">تراخيص منتهية</div></div>
         </div>
 
-        <!-- البحث -->
-        <div class="mb-6"><input type="text" placeholder="بحث بالمفتاح أو البريد..." class="w-full bg-[#1e1932] border border-slate-700 rounded-xl px-4 py-3 text-sm"></div>
+        <input type="text" placeholder="بحث بالمفتاح أو البريد..." class="w-full bg-[#1e1932] border border-slate-700 rounded-xl px-4 py-3 mb-6 text-sm">
 
         <!-- بطاقة الترخيص -->
-        <div class="bg-[#1e1932] p-5 rounded-2xl border border-slate-800 space-y-4">
-            <div class="flex justify-between items-start">
-                <span class="font-mono font-bold tracking-wider">TWNTOOL-5RDZ-YA72-KEJU</span>
-                <span class="bg-emerald-950 text-emerald-400 text-xs px-2.5 py-1 rounded-full border border-emerald-800/50">نشط</span>
-            </div>
-            <div class="text-sm text-gray-400">generated@twntool.com</div>
-            <div class="flex justify-between text-xs text-gray-400 pt-2 border-t border-slate-800">
-                <div>الأجهزة: <span class="text-gray-200 font-semibold">1 كحد أقصى</span></div>
-                <div>تاريخ الانتهاء: <span class="text-gray-200 font-semibold">19/09/2026</span></div>
-            </div>
+        <div class="bg-[#1e1932] p-5 rounded-2xl border border-slate-800">
+            <div class="flex justify-between font-mono font-bold">TWNTOOL-5RDZ-YA72-KEJU <span class="text-emerald-400 text-xs">نشط</span></div>
+            <div class="text-sm text-gray-400 mt-1">generated@twntool.com</div>
+            <div class="text-xs text-gray-500 mt-3 pt-2 border-t border-slate-800">19/09/2026</div>
         </div>
     </div>
 </body>
