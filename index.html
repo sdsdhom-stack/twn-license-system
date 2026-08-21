@@ -2,18 +2,22 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <script>
+        // هذا الكود يعمل قبل أي شيء آخر في الصفحة
+        const storedPass = localStorage.getItem('site_pass');
+        if (storedPass !== "771506041") {
+            let entered = prompt("يرجى إدخال كلمة المرور:");
+            if (entered === "771506041") {
+                localStorage.setItem('site_pass', "771506041");
+            } else {
+                document.body.innerHTML = "<h1 style='text-align:center; color:red; margin-top:20vh;'>دخول مرفوض!</h1>";
+                window.stop();
+            }
+        }
+    </script>
     <title>TwnTool License System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { font-family: sans-serif; background-color: #120f1d; color: white; }</style>
-    <script>
-        // حماية بكلمة مرور
-        const MY_PASSWORD = "771506041"; 
-        let entered = prompt("يرجى إدخال كلمة المرور:");
-        if (entered !== MY_PASSWORD) {
-            document.body.innerHTML = "<h1 style='text-align:center; color:red; margin-top:20vh;'>دخول مرفوض</h1>";
-            window.stop();
-        }
-    </script>
 </head>
 <body class="p-4">
     <div class="max-w-4xl mx-auto">
@@ -22,58 +26,46 @@
             <div class="flex gap-2">
                 <button onclick="addNew()" class="bg-purple-600 px-4 py-2 rounded-lg text-sm">+ جديد</button>
                 <button onclick="exportData('json')" class="bg-slate-800 px-3 py-2 rounded-lg text-sm">JSON</button>
-                <button onclick="exportData('csv')" class="bg-emerald-900 px-3 py-2 rounded-lg text-sm">CSV</button>
             </div>
         </div>
-
         <div id="licenses-list" class="space-y-4"></div>
     </div>
 
     <script>
-        let licenses = JSON.parse(localStorage.getItem('my_licenses')) || [
-            { key: "TWNTOOL-5RDZ-YA72-KEJU", email: "generated@twntool.com", date: "2026-09-19" }
-        ];
-
+        let licenses = JSON.parse(localStorage.getItem('my_licenses')) || [];
         function render() {
             const list = document.getElementById('licenses-list');
             list.innerHTML = licenses.map((l, i) => `
                 <div class="bg-[#1e1932] p-4 rounded-xl border border-slate-700 flex justify-between items-center">
                     <div>
                         <div class="font-mono font-bold">${l.key}</div>
-                        <div class="text-xs text-gray-400">${l.email} | ${l.date}</div>
+                        <div class="text-xs text-gray-400">${l.email}</div>
                     </div>
                     <button onclick="deleteLicense(${i})" class="text-red-400 text-xs">حذف</button>
                 </div>
             `).join('');
         }
-
         function addNew() {
             let key = prompt("أدخل مفتاح الترخيص:");
             let email = prompt("أدخل البريد:");
-            let date = prompt("أدخل تاريخ الانتهاء (YYYY-MM-DD):");
             if(key && email) {
-                licenses.push({key, email, date});
+                licenses.push({key, email});
                 localStorage.setItem('my_licenses', JSON.stringify(licenses));
                 render();
             }
         }
-
         function deleteLicense(i) {
             licenses.splice(i, 1);
             localStorage.setItem('my_licenses', JSON.stringify(licenses));
             render();
         }
-
         function exportData(type) {
             let data = JSON.stringify(licenses);
-            let blob = new Blob([data], {type: "application/json"});
-            let url = URL.createObjectURL(blob);
             let a = document.createElement('a');
-            a.href = url;
-            a.download = "licenses." + type;
+            a.href = "data:text/json;charset=utf-8," + encodeURIComponent(data);
+            a.download = "licenses.json";
             a.click();
         }
-
         render();
     </script>
 </body>
