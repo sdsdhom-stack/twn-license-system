@@ -12,10 +12,11 @@ module.exports = async (req, res) => {
     return res.status(500).json({ valid: false, message: "Missing Environment Variables in Vercel" });
   }
 
-  // تنظيف الرابط من أي شرطة زائدة في النهاية قد تسبب خطأ
-  if (supabaseUrl.endsWith('/')) {
-    supabaseUrl = supabaseUrl.slice(0, -1);
-  }
+  // الإصلاح التلقائي: استخراج الرابط الأساسي فقط وحذف أي زيادات منسوخة بالخطأ
+  try {
+    const parsedUrl = new URL(supabaseUrl);
+    supabaseUrl = parsedUrl.origin; 
+  } catch(e) {}
 
   try {
     const response = await fetch(`${supabaseUrl}/rest/v1/licenses?license_key=eq.${encodeURIComponent(key)}`, {
@@ -29,14 +30,12 @@ module.exports = async (req, res) => {
 
     const data = await response.json();
 
-    // إذا رفض Supabase الطلب، سيطبع لنا السبب الدقيق!
     if (!response.ok) {
       return res.status(200).json({ valid: false, message: "Supabase Connection Error", details: data });
     }
 
-    // إذا اتصل بنجاح ولكن لم يجد المفتاح في الجدول
     if (!data || data.length === 0) {
-      return res.status(200).json({ valid: false, message: "Key not found in database", entered_key: key });
+      return res.status(200).json({ valid: false, message: "Invalid license" });
     }
 
     const license = data[0];
@@ -49,6 +48,6 @@ module.exports = async (req, res) => {
     });
 
   } catch (err) {
-    return res.status(500).json({ valid: false, message: "Server crashed", error: err.message });
+    return res.status(500).json({ valid: false, message: "Server error", error: err.message });
   }
 };
