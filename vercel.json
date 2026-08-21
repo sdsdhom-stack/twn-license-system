@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/PHP/tool_verify.php",
+      "destination": "/api/tool_verify"
+    }
+  ]
+}
