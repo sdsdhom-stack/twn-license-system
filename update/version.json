@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "app_name": "TwnTool",
+  "download_url": "https://twn-license-system.vercel.app",
+  "changelog": "الإصدار الأول من أداة TwnTool",
+  "mandatory_update": false
+}
