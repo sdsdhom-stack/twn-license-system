@@ -1,53 +1,31 @@
-module.exports = async (req, res) => {
-  const { key } = req.query;
+import { createClient } from '@supabase/supabase-js';
 
-  if (!key) {
-    return res.status(400).json({ valid: false, message: "License key required" });
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
+
+  const { license_key, hwid } = req.body;
+
+  const { data: license, error } = await supabase
+    .from('licenses')
+    .select('*')
+    .eq('license_key', license_key)
+    .single();
+
+  if (error || !license) return res.status(400).json({ valid: false, message: 'مفتاح غير صحيح' });
+  if (license.status === 'banned') return res.status(403).json({ valid: false, message: 'المفتاح محظور' });
+
+  // ربط المفتاح بـ HWID الخاص بأول جهاز يسجل الدخول
+  if (!license.hwid) {
+    await supabase.from('licenses').update({ hwid: hwid, status: 'active' }).eq('license_key', license_key);
+    return res.status(200).json({ valid: true, message: 'تم تفعيل الجهاز بنجاح' });
   }
 
-  let supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return res.status(500).json({ valid: false, message: "Missing Environment Variables in Vercel" });
+  // مطابقة الجهاز المسجل
+  if (license.hwid === hwid) {
+    return res.status(200).json({ valid: true, message: 'الترخيص صالح' });
+  } else {
+    return res.status(401).json({ valid: false, message: 'المفتاح مستخدم على جهاز آخر' });
   }
-
-  // الإصلاح التلقائي: استخراج الرابط الأساسي فقط وحذف أي زيادات منسوخة بالخطأ
-  try {
-    const parsedUrl = new URL(supabaseUrl);
-    supabaseUrl = parsedUrl.origin; 
-  } catch(e) {}
-
-  try {
-    const response = await fetch(`${supabaseUrl}/rest/v1/licenses?license_key=eq.${encodeURIComponent(key)}`, {
-      method: 'GET',
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(200).json({ valid: false, message: "Supabase Connection Error", details: data });
-    }
-
-    if (!data || data.length === 0) {
-      return res.status(200).json({ valid: false, message: "Invalid license" });
-    }
-
-    const license = data[0];
-
-    return res.status(200).json({
-      valid: true,
-      message: "License verified successfully",
-      email: license.email,
-      expiry_date: license.expiry_date
-    });
-
-  } catch (err) {
-    return res.status(500).json({ valid: false, message: "Server error", error: err.message });
-  }
-};
+}
