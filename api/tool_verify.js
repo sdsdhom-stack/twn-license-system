@@ -1,12 +1,10 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
-  const { license_key, hwid } = req.body || {};
+  // قراءة البيانات سواء قادمة عبر POST body أو GET query parameters
+  const license_key = req.body?.license_key || req.query?.license_key;
+  const hwid = req.body?.hwid || req.query?.hwid;
 
   if (!license_key) {
-    return res.status(400).json({ valid: false, message: 'يرجى إرسال مفتاح الترخيص' });
+    return res.status(400).json({ valid: false, message: 'يرجى إرسال مفتاح الترخيص (license_key)' });
   }
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -17,7 +15,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // جلب بيانات الترخيص من Supabase مباشرة
     const response = await fetch(`${SUPABASE_URL}/rest/v1/licenses?license_key=eq.${encodeURIComponent(license_key)}`, {
       headers: {
         'apikey': SUPABASE_KEY,
@@ -46,7 +43,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({ hwid: hwid, status: 'active' })
+        body: JSON.stringify({ hwid: hwid || 'DEV_TEST_HWID', status: 'active' })
       });
       return res.status(200).json({ valid: true, message: 'تم تفعيل الجهاز بنجاح' });
     }
