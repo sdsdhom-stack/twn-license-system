@@ -1,6 +1,239 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TwnTool License System</title>
+    <!-- استخدام Tailwind CSS للتصميم -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#120f1d] text-gray-200 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- رأس الصفحة -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div class="flex items-center gap-3">
+                <span class="text-xl font-bold tracking-wide">TwnTool License System</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <span class="text-gray-400 text-sm ml-2">تصدير:</span>
+                <button onclick="exportJSON()" class="bg-[#1e1932] hover:bg-slate-800 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-lg text-sm transition">JSON</button>
+                <button onclick="exportCSV()" class="bg-[#132822] hover:bg-emerald-900/40 border border-emerald-900/50 text-emerald-300 px-3 py-1.5 rounded-lg text-sm transition">CSV</button>
+                <button onclick="openModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-1 ms-auto md:ms-0">+ جديد</button>
+            </div>
+        </div>
+
+        <div class="text-lg font-semibold mb-4 text-gray-300">الرئيسية</div>
+
+        <!-- بطاقات الإحصائيات -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- إجمالي التراخيص -->
+            <div class="bg-[#1e1932] p-5 rounded-2xl border border-purple-500/20 shadow-lg">
+                <div id="total-count" class="text-3xl font-bold mb-1 text-white">0</div>
+                <div class="text-gray-400 text-sm">إجمالي التراخيص</div>
+            </div>
+            <!-- تراخيص نشطة -->
+            <div class="bg-[#132822] p-5 rounded-2xl border border-emerald-500/20 shadow-lg">
+                <div id="active-count" class="text-3xl font-bold text-emerald-400 mb-1">0</div>
+                <div class="text-gray-400 text-sm">تراخيص نشطة</div>
+            </div>
+            <!-- تراخيص منتهية -->
+            <div class="bg-[#2d181b] p-5 rounded-2xl border border-rose-500/20 shadow-lg">
+                <div id="expired-count" class="text-3xl font-bold text-rose-400 mb-1">0</div>
+                <div class="text-gray-400 text-sm">تراخيص منتهية</div>
+            </div>
+        </div>
+
+        <!-- شريط البحث -->
+        <div class="mb-6">
+            <input type="text" id="search-input" onkeyup="filterLicenses()" placeholder="بحث بالمفتاح أو البريد..." class="w-full bg-[#1e1932] border border-slate-700/80 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition text-gray-200 placeholder-gray-500">
+        </div>
+
+        <!-- قائمة التراخيص -->
+        <div id="licenses-container" class="space-y-4">
+            <!-- سيتم تعبئة التراخيص ديناميكياً هنا -->
+        </div>
+    </div>
+
+    <!-- نافذة إضافة ترخيص جديد (Modal) -->
+    <div id="license-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-[#1e1932] border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-white">إضافة ترخيص جديد</h3>
+            <form id="license-form" onsubmit="addLicense(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">مفتاح الترخيص</label>
+                    <input type="text" id="new-key" required placeholder="TWNTOOL-XXXX-XXXX-XXXX" class="w-full bg-[#120f1d] border border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="new-email" required placeholder="user@twntool.com" class="w-full bg-[#120f1d] border border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">تاريخ الانتهاء</label>
+                    <input type="date" id="new-expiry" required class="w-full bg-[#120f1d] border border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">الحد الأقصى للأجهزة</label>
+                    <input type="number" id="new-devices" value="1" min="1" required class="w-full bg-[#120f1d] border border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-lg text-sm transition">إلغاء</button>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition">حفظ الترخيص</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // بيانات افتراضية مشابهة للصورة مع تخزين محلي (LocalStorage)
+        let licenses = JSON.parse(localStorage.getItem('twn_licenses')) || [
+            {
+                key: "TWNTOOL-5RDZ-YA72-KEJU",
+                email: "generated@twntool.com",
+                status: "active",
+                maxDevices: 1,
+                expiryDate: "2026-09-19"
+            }
+        ];
+
+        function saveAndRender() {
+            localStorage.setItem('twn_licenses', JSON.stringify(licenses));
+            renderLicenses(licenses);
+        }
+
+        function renderLicenses(data) {
+            const container = document.getElementById('licenses-container');
+            container.innerHTML = '';
+
+            let activeCount = 0;
+            let expiredCount = 0;
+
+            if (data.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 py-8 bg-[#1e1932] rounded-2xl border border-slate-800">لا توجد تراخيص مضافة حالياً</div>`;
+            }
+
+            data.forEach((item, index) => {
+                // التحقق من حالة الانتهاء تلقائياً بناءً على تاريخ اليوم
+                const isExpired = new Date(item.expiryDate) < new Date();
+                const statusText = isExpired ? "منتهي" : "نشط";
+                const statusClass = isExpired 
+                    ? "bg-rose-950/60 text-rose-400 border-rose-800/50" 
+                    : "bg-emerald-950 text-emerald-400 border-emerald-800/50";
+                const dotClass = isExpired ? "bg-rose-400" : "bg-emerald-400";
+
+                if (isExpired) expiredCount++; else activeCount++;
+
+                // تنسيق التاريخ للعرض
+                const formattedDate = item.expiryDate.split('-').reverse().join('/');
+
+                const card = document.createElement('div');
+                card.className = "bg-[#1e1932] p-5 rounded-2xl border border-slate-800/80 shadow-md space-y-4 hover:border-slate-700 transition";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <span class="font-mono font-bold tracking-wider text-base text-gray-100">${item.key}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="${statusClass} text-xs px-2.5 py-1 rounded-full border flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full ${dotClass}"></span> ${statusText}
+                            </span>
+                            <button onclick="deleteLicense(${index})" class="text-gray-500 hover:text-rose-400 text-xs px-1.5 py-1 transition" title="حذف">?</button>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-400">${item.email}</div>
+                    <div class="flex justify-between text-xs text-gray-400 pt-3 border-t border-slate-800">
+                        <div>الأجهزة: <span class="text-gray-200 font-semibold">${item.maxDevices} كحد أقصى</span></div>
+                        <div>تاريخ الانتهاء: <span class="text-gray-200 font-semibold">${formattedDate}</span></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // تحديث الإحصائيات في البطاقات العلوية
+            document.getElementById('total-count').innerText = data.length;
+            document.getElementById('active-count').innerText = activeCount;
+            document.getElementById('expired-count').innerText = expiredCount;
+        }
+
+        function filterLicenses() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = licenses.filter(l => 
+                l.key.toLowerCase().includes(query) || l.email.toLowerCase().includes(query)
+            );
+            renderLicenses(filtered);
+        }
+
+        function openModal() {
+            document.getElementById('license-modal').classList.remove('hidden');
+            document.getElementById('license-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('license-modal').classList.remove('flex');
+            document.getElementById('license-modal').classList.add('hidden');
+            document.getElementById('license-form').reset();
+        }
+
+        function addLicense(e) {
+            e.preventDefault();
+            const newKey = document.getElementById('new-key').value;
+            const newEmail = document.getElementById('new-email').value;
+            const newExpiry = document.getElementById('new-expiry').value;
+            const newDevices = document.getElementById('new-devices').value;
+
+            licenses.unshift({
+                key: newKey,
+                email: newEmail,
+                status: "active",
+                maxDevices: parseInt(newDevices),
+                expiryDate: newExpiry
+            });
+
+            saveAndRender();
+            closeModal();
+        }
+
+        function deleteLicense(index) {
+            if (confirm('هل أنت متأكد من حذف هذا الترخيص؟')) {
+                licenses.splice(index, 1);
+                saveAndRender();
+            }
+        }
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(licenses, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "licenses.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Key,Email,MaxDevices,ExpiryDate\r\n";
+            licenses.forEach(function(row) {
+                csvContent += [row.key, row.email, row.maxDevices, row.expiryDate].join(",") + "\r\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", encodedUri);
+            downloadAnchor.setAttribute("download", "licenses.csv");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // التشغيل الأولي
+        renderLicenses(licenses);
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TwnTool Admin</title>
